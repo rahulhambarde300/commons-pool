@@ -1069,28 +1069,8 @@ public class GenericObjectPool<T, E extends Exception> extends BaseGenericObject
             return;
         }
 
-        if (!p.deallocate()) {
-            throw new IllegalStateException(
-                    "Object has already been returned to this pool or is invalid");
-        }
-
-        final int maxIdleSave = getMaxIdle();
-        if (isClosed() || maxIdleSave > -1 && maxIdleSave <= idleObjects.size()) {
-            destroyAndSwallowExceptions(p);
-            ensureIdleAndSwallowExceptions(1, false);
-        } else {
-            if (getLifo()) {
-                idleObjects.addFirst(p);
-            } else {
-                idleObjects.addLast(p);
-            }
-            if (isClosed()) {
-                // Pool closed while object was being added to idle objects.
-                // Make sure the returned object is destroyed rather than left
-                // in the idle object pool (which would effectively be a leak)
-                clear();
-            }
-        }
+        deallocateOrThrow(p);
+        handleMaxIdle(p);
         updateStatsReturn(activeTime);
     }
 
@@ -1124,6 +1104,37 @@ public class GenericObjectPool<T, E extends Exception> extends BaseGenericObject
             ensureIdleAndSwallowExceptions(1, false);
             updateStatsReturn(p.getActiveDuration());
             return false;
+        }
+    }
+
+    /**
+     * Deallocates the given pooled object otherwise throws an exception
+     * @param p the pooled object to deallocate
+     */
+    private void deallocateOrThrow(PooledObject<T> p) {
+        if (!p.deallocate()) {
+            throw new IllegalStateException("Object has already been returned to this pool or is invalid");
+        }
+    }
+
+    /**
+     * Handles the max idle condition.
+     * @param p the pooled object to handle
+     */
+    private void handleMaxIdle(PooledObject<T> p) {
+        final int maxIdleSave = getMaxIdle();
+        if (isClosed() || maxIdleSave > -1 && maxIdleSave <= idleObjects.size()) {
+            destroyAndSwallowExceptions(p);
+            ensureIdleAndSwallowExceptions(1, false);
+        } else {
+            if (getLifo()) {
+                idleObjects.addFirst(p);
+            } else {
+                idleObjects.addLast(p);
+            }
+            if (isClosed()) {
+                clear();
+            }
         }
     }
 
