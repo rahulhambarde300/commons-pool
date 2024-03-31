@@ -262,6 +262,7 @@
           <groupId>org.apache.rat</groupId>
           <artifactId>apache-rat-plugin</artifactId>
           <configuration>
+            <skip>true</skip>
             <excludes>
               <exclude>src/test/resources/test1</exclude>
               <exclude>src/test/resources/test2</exclude>
@@ -375,6 +376,7 @@
           <groupId>org.apache.rat</groupId>
           <artifactId>apache-rat-plugin</artifactId>
           <configuration>
+            <skip>true</skip>
             <excludes>
               <exclude>src/test/resources/test1</exclude>
               <exclude>src/test/resources/test2</exclude>

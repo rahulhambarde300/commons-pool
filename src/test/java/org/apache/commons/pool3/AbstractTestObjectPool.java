@@ -141,7 +141,7 @@ public abstract class AbstractTestObjectPool {
         reset(pool, factory, expectedMethods);
 
         // makeObject Exceptions should be propagated to client code from addObject
-        factory.setMakeObjectFail(true);
+        factory.getFailureSimulator().setMakeObjectFail(true);
         assertThrows(PrivateException.class, pool::addObject, "Expected addObject to propagate makeObject exception.");
         expectedMethods.add(new MethodCall("makeObject"));
         assertEquals(expectedMethods, factory.getMethodCalls());
@@ -149,8 +149,8 @@ public abstract class AbstractTestObjectPool {
         clear(factory, expectedMethods);
 
         // passivateObject Exceptions should be propagated to client code from addObject
-        factory.setMakeObjectFail(false);
-        factory.setPassivateObjectFail(true);
+        factory.getFailureSimulator().setMakeObjectFail(false);
+        factory.getFailureSimulator().setPassivateObjectFail(true);
         assertThrows(PrivateException.class, pool::addObject, "Expected addObject to propagate passivateObject exception.");
         expectedMethods.add(new MethodCall("makeObject").returned(ONE));
         // StackObjectPool, SofReferenceObjectPool also validate on add
@@ -192,7 +192,7 @@ public abstract class AbstractTestObjectPool {
         reset(pool, factory, expectedMethods);
 
         // makeObject Exceptions should be propagated to client code from borrowObject
-        factory.setMakeObjectFail(true);
+        factory.getFailureSimulator().setMakeObjectFail(true);
         assertThrows(PrivateException.class, pool::borrowObject, "Expected borrowObject to propagate makeObject exception.");
         expectedMethods.add(new MethodCall("makeObject"));
         assertEquals(expectedMethods, factory.getMethodCalls());
@@ -202,7 +202,7 @@ public abstract class AbstractTestObjectPool {
         pool.addObject();
         clear(factory, expectedMethods);
 
-        factory.setActivateObjectFail(true);
+        factory.getFailureSimulator().setActivateObjectFail(true);
         expectedMethods.add(new MethodCall("activateObject", obj));
         // Expected NoSuchElementException - newly created object will also fail to activate
         assertThrows(NoSuchElementException.class, pool::borrowObject, "Expecting NoSuchElementException");
@@ -217,7 +217,7 @@ public abstract class AbstractTestObjectPool {
         pool.addObject();
         clear(factory, expectedMethods);
 
-        factory.setValidateObjectFail(true);
+        factory.getFailureSimulator().setValidateObjectFail(true);
         expectedMethods.add(new MethodCall("activateObject", ZERO));
         expectedMethods.add(new MethodCall("validateObject", ZERO));
         // Expected NoSuchElementException - newly created object will also fail to validate
@@ -250,7 +250,7 @@ public abstract class AbstractTestObjectPool {
 
         // Test exception handling clear should swallow destroy object failures
         reset(pool, factory, expectedMethods);
-        factory.setDestroyObjectFail(true);
+        factory.getFailureSimulator().setDestroyObjectFail(true);
         pool.addObjects(5);
         pool.clear();
         pool.close();
@@ -278,7 +278,7 @@ public abstract class AbstractTestObjectPool {
             return; // test not supported
         }
         reset(pool, factory, expectedMethods);
-        factory.setDestroyObjectFail(true);
+        factory.getFailureSimulator().setDestroyObjectFail(true);
         pool.addObjects(5);
         pool.close();
     }
@@ -309,7 +309,7 @@ public abstract class AbstractTestObjectPool {
         reset(pool, factory, expectedMethods);
         final Object obj2 = pool.borrowObject();
         clear(factory, expectedMethods);
-        factory.setDestroyObjectFail(true);
+        factory.getFailureSimulator().setDestroyObjectFail(true);
         assertThrows(PrivateException.class, () -> pool.invalidateObject(obj2));
         Thread.sleep(250); // could be deferred
         removeDestroyObjectCall(factory.getMethodCalls());
@@ -355,7 +355,7 @@ public abstract class AbstractTestObjectPool {
         assertEquals(1, pool.getNumIdle());
         assertEquals(2, pool.getNumActive());
         clear(factory, expectedMethods);
-        factory.setPassivateObjectFail(true);
+        factory.getFailureSimulator().setPassivateObjectFail(true);
         pool.returnObject(obj);
         // StackObjectPool, SoftReferenceObjectPool also validate on return
         if (pool instanceof SoftReferenceObjectPool) {
@@ -371,8 +371,8 @@ public abstract class AbstractTestObjectPool {
         reset(pool, factory, expectedMethods);
         obj = pool.borrowObject();
         clear(factory, expectedMethods);
-        factory.setPassivateObjectFail(true);
-        factory.setDestroyObjectFail(true);
+        factory.getFailureSimulator().setPassivateObjectFail(true);
+        factory.getFailureSimulator().setDestroyObjectFail(true);
         pool.returnObject(obj);
         pool.close();
     }

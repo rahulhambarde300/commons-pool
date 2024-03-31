@@ -71,6 +71,9 @@ import java.util.NoSuchElementException;
  */
 public interface KeyedObjectPool<K, V, E extends Exception> extends Closeable {
 
+    static final String MSG_NULL_KEY = "key must not be null.";
+    static final String MSG_NULL_KEYS = "keys must not be null.";
+
     /**
      * Creates an object using the {@link KeyedPooledObjectFactory factory} or
      * other implementation dependent mechanism, passivate it, and then place it
@@ -107,7 +110,7 @@ public interface KeyedObjectPool<K, V, E extends Exception> extends Closeable {
      */
     default void addObjects(final Collection<K> keys, final int count) throws E, IllegalArgumentException {
         if (keys == null) {
-            throw new IllegalArgumentException(PoolUtils.MSG_NULL_KEYS);
+            throw new IllegalArgumentException(MSG_NULL_KEYS);
         }
         for (final K key : keys) {
             addObjects(key, count);
@@ -130,7 +133,7 @@ public interface KeyedObjectPool<K, V, E extends Exception> extends Closeable {
      */
     default void addObjects(final K key, final int count) throws E, IllegalArgumentException {
         if (key == null) {
-            throw new IllegalArgumentException(PoolUtils.MSG_NULL_KEY);
+            throw new IllegalArgumentException(MSG_NULL_KEY);
         }
         for (int i = 0; i < count; i++) {
             addObject(key);

@@ -24,10 +24,12 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /**
@@ -1308,12 +1310,22 @@ public final class PoolUtils {
         }
     }
 
+
+    private static final AtomicReference<Supplier<Timer>> timerSupplierRef = new AtomicReference<>();
+
     /**
      * Timer used to periodically check pools idle object count. Because a
      * {@link Timer} creates a {@link Thread}, an IODH is used.
      */
-    static class TimerHolder {
-        static final Timer MIN_IDLE_TIMER = new Timer(true);
+    public static Timer getTimer() {
+        Supplier<Timer> timerSupplier = timerSupplierRef.updateAndGet(existingSupplier -> {
+            if (existingSupplier == null) {
+                return () -> new Timer("PoolIdleCheckTimer", true);
+            }
+            return existingSupplier;
+        });
+
+        return timerSupplier.get();
     }
 
     private static final String MSG_FACTOR_NEGATIVE = "factor must be positive.";
@@ -1652,7 +1664,7 @@ public final class PoolUtils {
      * @return the {@link Timer} for checking keyedPool's idle count.
      */
     private static Timer getMinIdleTimer() {
-        return TimerHolder.MIN_IDLE_TIMER;
+        return getTimer();
     }
 
     /**

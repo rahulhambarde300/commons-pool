@@ -680,8 +680,6 @@ public class TestPoolUtils {
      */
     @Test
     public void testTimerHolder() {
-        final PoolUtils.TimerHolder h = new PoolUtils.TimerHolder();
-        assertNotNull(h);
-        assertNotNull(PoolUtils.TimerHolder.MIN_IDLE_TIMER);
+        assertNotNull(PoolUtils.getTimer());
     }
 }
